@@ -85,6 +85,15 @@ def check_call_status(ack, body, logger):
 	session.update_call_status(app.client)
 	logger.info(body)
 
+# User wants to cancel the current call
+@app.action("cancel_call")
+def cancel_call(ack, body, logger):
+	# Acknowledge the shortcut request
+	ack()
+	session = UserSession.get_user(user_sessions, body["user"]["id"])
+	session.cancel_call(app.client)
+	logger.info(body)
+
 
 # Start your app
 def main():

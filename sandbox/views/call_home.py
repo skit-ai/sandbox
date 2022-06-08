@@ -287,6 +287,22 @@ def get_display_call_status_home(campaign_uuid, session_name, caller_number, tas
 					"type": "button",
 					"text": {
 						"type": "plain_text",
+						"text": "Cancel this call"
+					},
+					"action_id": "cancel_call"
+				}
+			]
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
 						"text": "Choose next task!"
 					},
 					"action_id": "display_task"

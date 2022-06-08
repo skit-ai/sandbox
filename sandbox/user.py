@@ -90,7 +90,7 @@ class UserSession(metaclass=LogExceptions):
 		self.__reset_session_data()
 
 		self.__load_old_task_sheets()
-		if self._task_sheet_df is not None:
+		if self._task_sheet_df is None:
 			self.__load_new_task_sheets()
 
 	def delete_session_info(self, client: App.client, body: Dict, view_name: str = START_HOME):
@@ -128,25 +128,24 @@ class UserSession(metaclass=LogExceptions):
 			)
 
 	def display_random_task(self, client: App.client, view_name: str = DISPLAY_TASK_HOME):
-		if self._task_sheet_df is not None:
 
-			if self._current_task is not None:
-				self.__save_task(self._current_task)
-			self.__load_random_task()
+		if self._current_task is not None:
+			self.__save_task(self._current_task)
+		self.__load_random_task()
 
-			self.__save_task_session_data()
+		self.__save_task_session_data()
 
-			self._view = get_view(view_name, session_name=self._session_info["session_name"],
-			                      campaign_uuid=self._session_info["campaign_uuid"],
-			                      caller_number=self._session_info["caller_number"],
-			                      task_data=self._current_task["data"])
-			# views.publish is the method that your app uses to push a view to the Home tab
-			client.views_publish(
-				# the user that opened your app's app home
-				user_id=self._user_id,
-				# the view object that appears in the app home
-				view=self._view
-			)
+		self._view = get_view(view_name, session_name=self._session_info["session_name"],
+		                      campaign_uuid=self._session_info["campaign_uuid"],
+		                      caller_number=self._session_info["caller_number"],
+		                      task_data=self._current_task["data"])
+		# views.publish is the method that your app uses to push a view to the Home tab
+		client.views_publish(
+			# the user that opened your app's app home
+			user_id=self._user_id,
+			# the view object that appears in the app home
+			view=self._view
+		)
 
 	def start_call(self, client: App.client, view_name: str = DISPLAY_CALL_HOME):
 
@@ -179,6 +178,22 @@ class UserSession(metaclass=LogExceptions):
 		                      caller_number=self._session_info["caller_number"],
 		                      task_data=self._current_task["data"],
 		                      call_status=self._current_task["call_status"])
+		# views.publish is the method that your app uses to push a view to the Home tab
+		client.views_publish(
+			# the user that opened your app's app home
+			user_id=self._user_id,
+			# the view object that appears in the app home
+			view=self._view
+		)
+
+	def cancel_call(self, client: App.client, view_name: str = DISPLAY_TASK_HOME):
+
+		self._current_task = {key: val for key, val in self._current_task.items() if key in ["index", "data"]}
+
+		self._view = get_view(view_name, session_name=self._session_info["session_name"],
+		                      campaign_uuid=self._session_info["campaign_uuid"],
+		                      caller_number=self._session_info["caller_number"],
+		                      task_data=self._current_task["data"])
 		# views.publish is the method that your app uses to push a view to the Home tab
 		client.views_publish(
 			# the user that opened your app's app home
