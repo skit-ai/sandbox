@@ -1,6 +1,6 @@
 # Sandbox
 
-Generate curated, pre-tagged datasets using the Outbound Dialler API
+Slackbot for generating curated, pre-tagged datasets, using the Outbound Dialler API
 
 ## Usage
 
@@ -9,7 +9,7 @@ Install dependencies
 poetry install
 ```
 
-Run the server
+Run the slackbot server
 ```commandline
 poetry run sandbox
 ```
@@ -18,7 +18,7 @@ The server will be listening on port 3000!
 
 ## Credentials
 
-You will need to load the following as environment variables, before running the server.
+You will need to load the following as environment variables, before starting the server.
 
 For the slack app:
 ```commandline
