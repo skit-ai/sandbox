@@ -45,7 +45,7 @@ class UserSession(metaclass=LogExceptions):
 	####
 	## Main methods. Used directly by app
 
-	def load_app_home(self, client: App.client, event: Dict, view_name: str = START_HOME):
+	def show_app_home(self, client: App.client, event: Dict, view_name: str = START_HOME):
 
 		if self._view is None:
 			self._view = get_view(view_name)
@@ -56,13 +56,13 @@ class UserSession(metaclass=LogExceptions):
 			view=self._view
 		)
 
-	def load_session_info_modal(self, client: App.client, body: Dict, view_name: str = SESSION_INFO_MODAL):
+	def view_session_info(self, client: App.client, body: Dict, view_name: str = SESSION_INFO_MODAL):
 		client.views_open(
 			trigger_id=body["trigger_id"],
 			view=get_view(view_name)
 		)
 
-	def parse_session_info_modal(self, client: App.client, view: Dict, view_name: str = TASK_INFO_HOME):
+	def parse_and_show_session_info(self, client: App.client, view: Dict, view_name: str = TASK_INFO_HOME):
 
 		self.__reset_session_info()
 
@@ -107,7 +107,7 @@ class UserSession(metaclass=LogExceptions):
 			view=self._view
 		)
 
-	def load_session_stats_modal(self, client: App.client, body: Dict, view_name: str = SESSION_STATS_MODAL):
+	def view_session_stats(self, client: App.client, body: Dict, view_name: str = SESSION_STATS_MODAL):
 		if self._task_sheet_df is not None:
 
 			for index in self._created_calls_df[self._created_calls_df["call_status"] != "SUCCESS"].index:
@@ -121,7 +121,7 @@ class UserSession(metaclass=LogExceptions):
 				view=get_view(view_name, session_stats=session_stats)
 			)
 
-	def display_random_task(self, client: App.client, view_name: str = DISPLAY_TASK_HOME):
+	def show_random_task(self, client: App.client, body: Dict, view_name: str = DISPLAY_TASK_HOME):
 
 		if self._current_task is not None:
 			self.__save_task(self._current_task)
@@ -138,7 +138,7 @@ class UserSession(metaclass=LogExceptions):
 			view=self._view
 		)
 
-	def start_call(self, client: App.client, view_name: str = DISPLAY_CALL_HOME):
+	def start_call(self, client: App.client, body: Dict, view_name: str = DISPLAY_CALL_HOME):
 
 		call_task_uuid, call_placed = skit_client.create_call(campaign_uuid=self._session_info["campaign_uuid"],
 		                                                      caller_number=self._session_info["caller_number"],
@@ -156,7 +156,7 @@ class UserSession(metaclass=LogExceptions):
 			view=self._view
 		)
 
-	def update_call_status(self, client: App.client, view_name: str = DISPLAY_CALL_STATUS_HOME):
+	def update_call_status(self, client: App.client, body: Dict, view_name: str = DISPLAY_CALL_STATUS_HOME):
 
 		self._current_task["call_data"], self._current_task["call_status"] = skit_client.retrieve_call(
 			self._current_task["call_task_uuid"])
@@ -171,7 +171,7 @@ class UserSession(metaclass=LogExceptions):
 			view=self._view
 		)
 
-	def cancel_call(self, client: App.client, view_name: str = DISPLAY_TASK_HOME):
+	def delete_current_call(self, client: App.client, body: Dict, view_name: str = DISPLAY_TASK_HOME):
 
 		self._current_task = {key: val for key, val in self._current_task.items() if key in ["index", "data"]}
 
@@ -266,7 +266,7 @@ class UserSession(metaclass=LogExceptions):
 			text="Something went wrong"
 	    )
 
-	def load_all_task_sheets(self, client: App.client, body: Dict, view_name: str = ALL_TASK_SHEETS_MODAL):
+	def view_all_task_sheets(self, client: App.client, body: Dict, view_name: str = ALL_TASK_SHEETS_MODAL):
 
 		files = os.listdir(os.path.join("data", "tasks"))
 		task_sheet_list = [f.rsplit(".csv", 1)[0] for f in files]
@@ -277,7 +277,7 @@ class UserSession(metaclass=LogExceptions):
 			view=self._log_view
 		)
 
-	def load_task_sheet_info(self, client: App.client, body: Dict, view_name: str = TASK_SHEET_INFO_MODAL):
+	def view_task_sheet_info(self, client: App.client, body: Dict, view_name: str = TASK_SHEET_INFO_MODAL):
 
 		task_sheet_name = body["actions"][0]["value"]
 		task_fields = pd.read_csv(os.path.join("data", "tasks", f"{task_sheet_name}.csv")).columns.to_list()
@@ -288,7 +288,7 @@ class UserSession(metaclass=LogExceptions):
 			view=get_view(view_name, previous_view=self._log_view, task_fields=task_fields)
 		)
 
-	def post_all_task_sessions(self, client: App.client, view_name: str = ALL_TASK_SESSIONS_MESSAGE):
+	def post_all_task_sessions(self, client: App.client, body: Dict, view_name: str = ALL_TASK_SESSIONS_MESSAGE):
 
 		task_session_list = os.listdir(os.path.join("data", "users", f"{self._user_id}"))
 
@@ -298,7 +298,7 @@ class UserSession(metaclass=LogExceptions):
 			text="Something went wrong"
 		)
 
-	def download_session_data(self, client: App.client, body: Dict):
+	def upload_session_data(self, client: App.client, body: Dict):
 
 		session_name = body["actions"][0]["value"]
 		data_file = os.path.join("data", "users", f"{self._user_id}", f"{session_name}", "created_calls.csv")
