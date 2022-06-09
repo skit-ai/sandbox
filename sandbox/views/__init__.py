@@ -1,7 +1,8 @@
 from sandbox.views.start_home import *
-from sandbox.views.session_info import *
+from sandbox.views.session_modal import *
 from sandbox.views.task_home import *
 from sandbox.views.call_home import *
+from sandbox.views.messages_tab import *
 
 
 VIEWS = {
@@ -12,6 +13,10 @@ VIEWS = {
 	"display_task_home": get_display_task_home,
 	"display_call_home": get_display_call_home,
 	"display_call_status_home": get_display_call_status_home,
+	"help_message": get_help_message,
+	"all_task_sheets_modal": get_all_task_sheets_modal,
+	"task_sheet_info_modal": get_task_sheet_info_modal,
+	"all_task_sessions_message": get_all_task_sessions_message,
 }
 
 

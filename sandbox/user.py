@@ -19,6 +19,10 @@ TASK_INFO_HOME = "task_info_home"
 DISPLAY_TASK_HOME = "display_task_home"
 DISPLAY_CALL_HOME = "display_call_home"
 DISPLAY_CALL_STATUS_HOME = "display_call_status_home"
+HELP_MESSAGE = "help_message"
+ALL_TASK_SHEETS_MODAL = "all_task_sheets_modal"
+TASK_SHEET_INFO_MODAL = "task_sheet_info_modal"
+ALL_TASK_SESSIONS_MESSAGE = "all_task_sessions_message"
 
 ## cols
 CREATED_CALLS_COLUMNS = ["index", "data", "call_task_uuid", "call_status", "call_data"]
@@ -28,8 +32,10 @@ skit_client = OutboundDiallerClient()
 class UserSession(metaclass=LogExceptions):
 	""" Instantiates a UserSession object to handle Slack interactions for a particular user."""
 
-	def __init__(self, user_id):
-		self._user_id = str(user_id)
+	def __init__(self, user_id, channel_id):
+		self._user_id = user_id
+		self._channel_id = channel_id
+
 		self._view = None
 		self._session_info = None
 		self._task_sheet_df = None
@@ -40,22 +46,19 @@ class UserSession(metaclass=LogExceptions):
 	## Main methods. Used directly by app
 
 	def load_app_home(self, client: App.client, event: Dict, view_name: str = START_HOME):
-		if not self._view:
+
+		if self._view is None:
 			self._view = get_view(view_name)
-		# views.publish is the method that your app uses to push a view to the Home tab
+			self.post_help_message(client)
+
 		client.views_publish(
-			# the user that opened your app's app home
 			user_id=self._user_id,
-			# the view object that appears in the app home
 			view=self._view
 		)
 
 	def load_session_info_modal(self, client: App.client, body: Dict, view_name: str = SESSION_INFO_MODAL):
-		# Call views_open with the built-in client
 		client.views_open(
-			# Pass a valid trigger_id within 3 seconds of receiving it
 			trigger_id=body["trigger_id"],
-			# View payload
 			view=get_view(view_name)
 		)
 
@@ -77,11 +80,9 @@ class UserSession(metaclass=LogExceptions):
 		self._view = get_view(view_name, session_name=self._session_info["session_name"],
 		                      campaign_uuid=self._session_info["campaign_uuid"],
 		                      caller_number=self._session_info["caller_number"])
-		# views.publish is the method that your app uses to push a view to the Home tab
+
 		client.views_publish(
-			# the user that opened your app's app home
 			user_id=self._user_id,
-			# the view object that appears in the app home
 			view=self._view
 		)
 
@@ -100,13 +101,9 @@ class UserSession(metaclass=LogExceptions):
 		self.__reset_session_info()
 		self.__reset_session_data()
 
-		# Call views_open with the built-in client
 		self._view = get_view(view_name)
-		# views.publish is the method that your app uses to push a view to the Home tab
 		client.views_publish(
-			# the user that opened your app's app home
 			user_id=self._user_id,
-			# the view object that appears in the app home
 			view=self._view
 		)
 
@@ -119,11 +116,8 @@ class UserSession(metaclass=LogExceptions):
 
 			session_stats = self.__check_stats()
 
-			# Call views_open with the built-in client
 			client.views_open(
-				# Pass a valid trigger_id within 3 seconds of receiving it
 				trigger_id=body["trigger_id"],
-				# View payload
 				view=get_view(view_name, session_stats=session_stats)
 			)
 
@@ -139,11 +133,8 @@ class UserSession(metaclass=LogExceptions):
 		                      campaign_uuid=self._session_info["campaign_uuid"],
 		                      caller_number=self._session_info["caller_number"],
 		                      task_data=self._current_task["data"])
-		# views.publish is the method that your app uses to push a view to the Home tab
 		client.views_publish(
-			# the user that opened your app's app home
 			user_id=self._user_id,
-			# the view object that appears in the app home
 			view=self._view
 		)
 
@@ -160,11 +151,8 @@ class UserSession(metaclass=LogExceptions):
 		                      caller_number=self._session_info["caller_number"],
 		                      task_data=self._current_task["data"],
 		                      call_placed=call_placed)
-		# views.publish is the method that your app uses to push a view to the Home tab
 		client.views_publish(
-			# the user that opened your app's app home
 			user_id=self._user_id,
-			# the view object that appears in the app home
 			view=self._view
 		)
 
@@ -178,11 +166,8 @@ class UserSession(metaclass=LogExceptions):
 		                      caller_number=self._session_info["caller_number"],
 		                      task_data=self._current_task["data"],
 		                      call_status=self._current_task["call_status"])
-		# views.publish is the method that your app uses to push a view to the Home tab
 		client.views_publish(
-			# the user that opened your app's app home
 			user_id=self._user_id,
-			# the view object that appears in the app home
 			view=self._view
 		)
 
@@ -194,22 +179,10 @@ class UserSession(metaclass=LogExceptions):
 		                      campaign_uuid=self._session_info["campaign_uuid"],
 		                      caller_number=self._session_info["caller_number"],
 		                      task_data=self._current_task["data"])
-		# views.publish is the method that your app uses to push a view to the Home tab
 		client.views_publish(
-			# the user that opened your app's app home
 			user_id=self._user_id,
-			# the view object that appears in the app home
 			view=self._view
 		)
-
-	####
-	## Class methods
-
-	@classmethod
-	def get_user(cls, sessions: Dict, user_id: str):
-		if user_id not in sessions:
-			sessions[user_id] = cls(user_id)
-		return sessions.get(user_id)
 
 	####
 	## Internal methods. Mostly handles data flows
@@ -282,3 +255,70 @@ class UserSession(metaclass=LogExceptions):
 
 	def __delete_session(self):
 		shutil.rmtree(os.path.join("data", "users", self._user_id, self._session_info["session_name"]))
+
+	####
+	## Methods for interacting through the Messages tab
+
+	def post_help_message(self, client: App.client, view_name: str = HELP_MESSAGE):
+		client.chat_postMessage(
+	        channel=self._channel_id,
+	        blocks=get_view(view_name, user_id=self._user_id),
+			text="Something went wrong"
+	    )
+
+	def load_all_task_sheets(self, client: App.client, body: Dict, view_name: str = ALL_TASK_SHEETS_MODAL):
+
+		files = os.listdir(os.path.join("data", "tasks"))
+		task_sheet_list = [f.rsplit(".csv", 1)[0] for f in files]
+
+		self._log_view = get_view(view_name, task_sheet_list=task_sheet_list)
+		client.views_open(
+			trigger_id=body["trigger_id"],
+			view=self._log_view
+		)
+
+	def load_task_sheet_info(self, client: App.client, body: Dict, view_name: str = TASK_SHEET_INFO_MODAL):
+
+		task_sheet_name = body["actions"][0]["value"]
+		task_fields = pd.read_csv(os.path.join("data", "tasks", f"{task_sheet_name}.csv")).columns.to_list()
+
+		client.views_update(
+			view_id=body["view"]["id"],
+			hash=body["view"]["hash"],
+			view=get_view(view_name, previous_view=self._log_view, task_fields=task_fields)
+		)
+
+	def post_all_task_sessions(self, client: App.client, view_name: str = ALL_TASK_SESSIONS_MESSAGE):
+
+		task_session_list = os.listdir(os.path.join("data", "users", f"{self._user_id}"))
+
+		client.chat_postMessage(
+			channel=self._channel_id,
+			blocks=get_view(view_name, task_session_list=task_session_list),
+			text="Something went wrong"
+		)
+
+	def download_session_data(self, client: App.client, body: Dict):
+
+		session_name = body["actions"][0]["value"]
+		data_file = os.path.join("data", "users", f"{self._user_id}", f"{session_name}", "created_calls.csv")
+
+		client.chat_postMessage(
+			channel=self._channel_id,
+			text="Not implemented yet"
+		)
+
+		# client.files_upload(
+		# 	channels=self._channel_id,
+		# 	initial_comment="Here's my file :smile:",
+		# 	file=data_file,
+		# )
+
+	####
+	## Class methods
+
+	@classmethod
+	def get_user(cls, sessions: Dict, user_id: str, channel_id: str = None):
+		if user_id not in sessions:
+			sessions[user_id] = cls(user_id, channel_id)
+		return sessions.get(user_id)

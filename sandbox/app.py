@@ -13,11 +13,14 @@ app = App(
 	signing_secret=os.environ.get("SLACK_SIGNING_SECRET")
 )
 
+####
+## Home tab
+
 # User opens App Home tab
 @app.event("app_home_opened")
 def app_home_opened(client, event, logger):
 	try:
-		session = UserSession.get_user(user_sessions, event["user"])
+		session = UserSession.get_user(user_sessions, event["user"], event["channel"])
 		session.load_app_home(client, event)
 
 	except Exception as e:
@@ -92,6 +95,46 @@ def cancel_call(ack, body, logger):
 	ack()
 	session = UserSession.get_user(user_sessions, body["user"]["id"])
 	session.cancel_call(app.client)
+	logger.info(body)
+
+####
+## Messages tab
+
+@app.message("help")
+def post_help_info(message, say):
+	session = UserSession.get_user(user_sessions, message["user"])
+	session.post_help_message(app.client)
+
+@app.action("list_task_sheets")
+def list_all_task_sheets(ack, body, logger):
+	# Acknowledge the shortcut request
+	ack()
+	session = UserSession.get_user(user_sessions, body["user"]["id"])
+	session.load_all_task_sheets(app.client, body)
+	logger.info(body)
+
+@app.action("task_sheet_info")
+def list_task_sheet_info(ack, body, logger):
+	# Acknowledge the shortcut request
+	ack()
+	session = UserSession.get_user(user_sessions, body["user"]["id"])
+	session.load_task_sheet_info(app.client, body)
+	logger.info(body)
+
+@app.action("list_task_sessions")
+def post_all_task_sessions(ack, body, logger):
+	# Acknowledge the shortcut request
+	ack()
+	session = UserSession.get_user(user_sessions, body["user"]["id"])
+	session.post_all_task_sessions(app.client)
+	logger.info(body)
+
+@app.action("download_session_data")
+def download_session_data(ack, body, logger):
+	# Acknowledge the shortcut request
+	ack()
+	session = UserSession.get_user(user_sessions, body["user"]["id"])
+	session.download_session_data(app.client, body)
 	logger.info(body)
 
 
