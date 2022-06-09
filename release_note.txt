@@ -1,0 +1,38 @@
+*v0.3.0
+
+Supports interactions over Home and Messages tab in the App home.
+
+In the App Home tab, supports actions for:
+- Starting a Task Session by
+    - linking to an existing Outbound Dialler campaign
+    - linking a phone number to generate outbound calls at
+    - choosing a curated Task Sheet
+- Displaying a random task from the Task Sheet
+- Initiating a call for generating speech data for the task
+- Re-dial or change task, in case of call creation failure
+- Checking status of a created call, while it is in progress
+    - `NOT COMPLETED`
+    - `NOT ANSWERED`
+    - `NOT ENDED` -> successful call
+    - `SUCCESS` -> successful call
+- Stopping a successful call from being logged - in case of user or network error
+- Displaying another random task for generation
+- Checking the stats of the current Task Session - `Completed`, `In Progress`, and `Remaining` tasks
+
+In the App Messages tab, supports actions for:
+- Listing all existing Task Sheets
+- Displaying the fields of a chosen Task Sheet
+- Listing all existing Task Sessions for the user
+- Displaying info for a chosen Task Session
+- Downloading the remaining task and completed tasks (with call data) for a chosen Task Session
+
+
+v0.2.2
+
+Added functionality for stopping a successful call from being logged. This accounts for cases of user or
+network error (in an otherwise successful call).
+
+
+v0.2.1
+
+Support basic interactions over Home tab in the App home.
