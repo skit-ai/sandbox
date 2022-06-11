@@ -4,21 +4,20 @@ import requests
 from typing import Dict, Tuple
 
 
-API_BASEPATH = os.getenv("API_BASEPATH")
-
-LOGIN_URL = f"{API_BASEPATH}/oauth/"
-TOKEN_REFRESH_URL = f"{API_BASEPATH}/oauth/refresh-token/"
-CREATE_CALLS_URL = f"{API_BASEPATH}/campaign_manager/outbound/calls/"
-RETRIEVE_CALL_URL = f"{API_BASEPATH}/campaign_manager/outbound/calls/"
+LOGIN_URL = "{}/oauth/"
+TOKEN_REFRESH_URL = "{}/oauth/refresh-token/"
+CREATE_CALLS_URL = "{}/campaign_manager/outbound/calls/"
+RETRIEVE_CALL_URL = "{}/campaign_manager/outbound/calls/{}/"
 
 
 class OutboundDiallerClient():
     """ Instantiates a client object to handle interactions with the Outcound Calls API."""
 
-    def __init__(self, email=None, password=None):
+    def __init__(self, email=None, password=None, api_basepath=None):
 
         self._access_token = self._refresh_token = None
 
+        self._api_basepath = os.getenv("API_BASEPATH", api_basepath)
         self._email = os.getenv("OUTBOUND_DIALLER_EMAIL", email)
         self._password = os.getenv("OUTBOUND_DIALLER_PASSWORD", password)
 
@@ -110,7 +109,9 @@ class OutboundDiallerClient():
             'Content-Type': 'application/json'
         }
 
-        response = requests.request("POST", LOGIN_URL, headers=headers, data=payload)
+        url = LOGIN_URL.format(self._api_basepath)
+
+        response = requests.request("POST", url, headers=headers, data=payload)
         return self.check_json(response.text)
 
     def __refresh_token_api(self, refresh_token) -> Dict:
@@ -121,7 +122,9 @@ class OutboundDiallerClient():
             'Authorization': 'Bearer {}'.format(refresh_token)
         }
 
-        response = requests.request("GET", TOKEN_REFRESH_URL, headers=headers, data=payload)
+        url = TOKEN_REFRESH_URL.format(self._api_basepath)
+
+        response = requests.request("GET", url, headers=headers, data=payload)
         return self.check_json(response.text)
 
     def __create_calls_api(self, campaign_uuid, caller_number_list, metadata_list, tag) -> Dict:
@@ -143,7 +146,9 @@ class OutboundDiallerClient():
             'Content-Type': 'application/json'
         }
 
-        response = requests.request("POST", CREATE_CALLS_URL, headers=headers, data=payload)
+        url = CREATE_CALLS_URL.format(self._api_basepath)
+
+        response = requests.request("POST", url, headers=headers, data=payload)
         return self.check_json(response.text)
 
     def __retrieve_call_api(self, call_task_uuid):
@@ -154,9 +159,8 @@ class OutboundDiallerClient():
             'Authorization': 'Bearer {}'.format(self._access_token)
         }
 
-        url = "{}{}/".format(RETRIEVE_CALL_URL, call_task_uuid)
+        url = RETRIEVE_CALL_URL.format(self._api_basepath, call_task_uuid)
 
         response = requests.request("GET", url, headers=headers, data=payload)
-
         return self.check_json(response.text)
 
