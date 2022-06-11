@@ -110,10 +110,6 @@ class UserSession(metaclass=LogExceptions):
 	def view_session_stats(self, client: App.client, body: Dict, view_name: str = SESSION_STATS_MODAL):
 		if self._task_sheet_df is not None:
 
-			for index in self._created_calls_df[self._created_calls_df["call_status"] != "SUCCESS"].index:
-				self._created_calls_df.loc[index]["call_data"], self._created_calls_df.loc[index][
-					"call_status"] = skit_client.retrieve_call(self._created_calls_df.loc[index]["call_task_uuid"])
-
 			session_stats = self.__check_stats()
 
 			client.views_open(
@@ -239,7 +235,18 @@ class UserSession(metaclass=LogExceptions):
 		self._current_task["call_data"] = call_data
 		self._current_task["call_status"] = call_status
 
+	def __check_all_status(self, created_calls_df: pd.DataFrame):
+		for index in created_calls_df[created_calls_df["call_status"] != "SUCCESS"].index:
+			created_calls_df.loc[index, "call_data"], created_calls_df.loc[
+				index, "call_status"] = skit_client.retrieve_call(
+				created_calls_df.loc[index]["call_task_uuid"])
+
+		return created_calls_df
+
 	def __check_stats(self):
+
+		self.__check_all_status(self._created_calls_df)
+
 		return {
 			"Completed": len(self._created_calls_df[self._created_calls_df["call_status"] == "SUCCESS"]),
 			"In Progress":len(self._created_calls_df[self._created_calls_df["call_status"] != "SUCCESS"]),
@@ -290,7 +297,8 @@ class UserSession(metaclass=LogExceptions):
 
 	def post_all_task_sessions(self, client: App.client, body: Dict, view_name: str = ALL_TASK_SESSIONS_MESSAGE):
 
-		task_session_list = os.listdir(os.path.join("data", "users", f"{self._user_id}"))
+		dir_path = os.path.join("data", "users", f"{self._user_id}")
+		task_session_list = [name for name in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, name))]
 
 		client.chat_postMessage(
 			channel=self._channel_id,
@@ -302,17 +310,15 @@ class UserSession(metaclass=LogExceptions):
 
 		session_name = body["actions"][0]["value"]
 		data_file = os.path.join("data", "users", f"{self._user_id}", f"{session_name}", "created_calls.csv")
+		data = self.__check_all_status(pd.read_csv(data_file))
+		data.to_csv(data_file, index=False)
 
-		client.chat_postMessage(
-			channel=self._channel_id,
-			text="Not implemented yet"
+		client.files_upload(
+			channels=self._channel_id,
+			initial_comment="Here's your download of created calls :smile:",
+			file=data_file,
+			title=f"{session_name}.created_calls.csv"
 		)
-
-		# client.files_upload(
-		# 	channels=self._channel_id,
-		# 	initial_comment="Here's my file :smile:",
-		# 	file=data_file,
-		# )
 
 	####
 	## Class methods
