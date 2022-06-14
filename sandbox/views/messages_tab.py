@@ -1,86 +1,25 @@
 from typing import List, Dict
+from sandbox.views.blocks import *
 
-option_blocks = [
-	{
-		"type": "divider"
-	},
-	{
-		"type": "section",
-		"text": {
-			"type": "mrkdwn",
-			"text": "List all uploaded Task Sheets."
-		},
-		"accessory": {
-			"type": "button",
-			"text": {
-				"type": "plain_text",
-				"text": "Click Me",
-				"emoji": True
-			},
-			"action_id": "list_task_sheets"
-		}
-	},
-	{
-			"type": "divider"
-	},
-	{
-		"type": "section",
-		"text": {
-			"type": "mrkdwn",
-			"text": "List all existing Task Sessions."
-		},
-		"accessory": {
-			"type": "button",
-			"text": {
-				"type": "plain_text",
-				"text": "Click Me",
-				"emoji": True
-			},
-			"action_id": "list_task_sessions"
-		}
-	},
-]
+def get_options_blocks():
+	return [
+		get_divider(),
+		get_button_with_text(text="List all uploaded Task Sheets.", button_text="Click Me", action_id="list_task_sheets"),
+		get_divider(),
+		get_button_with_text(text="List all existing Task Sessions.", button_text="Click Me", action_id="list_task_sessions"),
+	]
+
 
 def get_help_message(user_id):
 
 	blocks = [
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": f"Hi there, <@{user_id}>!\n\nTry one of the following:"
-			}
-		},
+		get_text(type="mrkdwn", text="Hi there, <@{}>!\n\nTry one of the following:".format(user_id)),
 	]
-	blocks += option_blocks
+	blocks.extend(get_options_blocks())
 	return blocks
 
-def get_all_task_sheets_modal(task_sheet_list: List):
 
-	blocks = []
-	for task_sheet_name in task_sheet_list:
-		blocks += [
-			{
-				"type": "divider"
-			},
-			{
-				"type": "section",
-				"text": {
-					"type": "mrkdwn",
-					"text": f"{task_sheet_name}"
-				},
-				"accessory": {
-					"type": "button",
-					"text": {
-						"type": "plain_text",
-						"text": "Show info",
-						"emoji": True
-					},
-					"value": f"{task_sheet_name}",
-					"action_id": "task_sheet_info"
-				}
-			},
-		]
+def get_all_task_sheets_modal(task_sheet_list: List):
 
 	view = {
 		"type": "modal",
@@ -89,52 +28,36 @@ def get_all_task_sheets_modal(task_sheet_list: List):
 			"type": "plain_text",
 			"text": "Task Sheet names"
 		},
-		"blocks": blocks
+		"blocks": []
 	}
-
+	for task_sheet_name in task_sheet_list:
+		view["blocks"].extend(
+			[
+				get_divider(),
+				get_button_with_text(text="{}".format(task_sheet_name), button_text="Show info",
+				                     value="{}".format(task_sheet_name), action_id="task_sheet_info"),
+			]
+		)
 	return view
+
 
 def get_task_sheet_info_modal(previous_view: Dict, task_fields: List):
 
 	view = previous_view.copy()
-
-	view["blocks"] = [
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": f'*[ {", ".join(task_fields)} ]*'
-			}
-		},
-	] + previous_view["blocks"]
-
+	view["blocks"] = [get_text(type="mrkdwn", text="*[ {} ]*".format(", ".join(task_fields)))]
+	view["blocks"].extend(previous_view["blocks"])
 	return view
+
 
 def get_all_task_sessions_message(task_session_list: List):
 
 	blocks = []
 	for session_name in task_session_list:
-		blocks += [
-			{
-				"type": "divider"
-			},
-			{
-				"type": "section",
-				"text": {
-					"type": "mrkdwn",
-					"text": f"{session_name}"
-				},
-				"accessory": {
-					"type": "button",
-					"text": {
-						"type": "plain_text",
-						"text": "Download data",
-						"emoji": True
-					},
-					"value": f"{session_name}",
-					"action_id": "download_session_data"
-				}
-			},
-		]
-
+		blocks.extend(
+			[
+				get_divider(),
+				get_button_with_text(text="{}".format(session_name), button_text="Download data",
+				                     value="{}".format(session_name), action_id="download_session_data"),
+			]
+		)
 	return blocks
