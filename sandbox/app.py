@@ -26,24 +26,64 @@ def app_home_opened(client, event, logger):
 	except Exception as e:
 		logger.error(f"Error publishing home tab: {e}")
 
-# User wants to start a new session
-@app.action("new_session_info")
-def new_session_info(ack, body, logger):
+# User wants to start a new session - with a task sheet
+@app.action("new_session_with_tasks")
+def new_session_action(ack, body, logger):
 	ack()
 	user = User.get_user(users_dict, body["user"]["id"])
-	user.open_session_info(app.client, body)
+	user.open_session_info_with_tasks(app.client, body)
+	logger.info(body)
+
+# User wants to start a new session - without a task sheet
+@app.action("new_session_wo_tasks")
+def new_session_action(ack, body, logger):
+	ack()
+	user = User.get_user(users_dict, body["user"]["id"])
+	user.open_session_info_wo_tasks(app.client, body)
+	logger.info(body)
+
+# User submits modal with session info -
+@app.view("session_info_with_tasks_modal")
+def session_info_submission(ack, body, client, view, logger):
+	user = User.get_user(users_dict, body["user"]["id"])
+	user.show_session_info_with_tasks(client, view)
+	ack()
 	logger.info(body)
 
 # User submits modal with session info
-@app.view("session_info_modal")
-def handle_submission(ack, body, client, view, logger):
+@app.view("session_info_wo_tasks_modal")
+def session_info_submission(ack, body, client, view, logger):
 	user = User.get_user(users_dict, body["user"]["id"])
-	user.parse_and_show_session_info(client, view)
+	user.show_session_info_wo_tasks(client, view)
 	ack()
 	logger.info(body)
 
-# User wants to delete session
-@app.action("delete_session_info")
+# User wants to resume an existing session
+@app.action("resume_session")
+def resume_session_action(ack, body, logger):
+	ack()
+	user = User.get_user(users_dict, body["user"]["id"])
+	user.open_resume_session(app.client, body)
+	logger.info(body)
+
+# User submits resume session modal
+@app.view("resume_session_modal")
+def handle_submission(ack, body, client, view, logger):
+	user = User.get_user(users_dict, body["user"]["id"])
+	user.parse_and_resume_session(client, view)
+	ack()
+	logger.info(body)
+
+# User wants to pause a current session
+@app.action("pause_session")
+def new_session_info(ack, body, logger):
+	ack()
+	user = User.get_user(users_dict, body["user"]["id"])
+	user.show_start_home(app.client, body)
+	logger.info(body)
+
+# User wants to delete current session
+@app.action("delete_session")
 def delete_session(ack, body, logger):
 	ack()
 	user = User.get_user(users_dict, body["user"]["id"])
@@ -51,7 +91,7 @@ def delete_session(ack, body, logger):
 	logger.info(body)
 
 # User wants to check stats for the session
-@app.action("session_stats")
+@app.action("session_stats_with_tasks")
 def check_session_stats(ack, body, logger):
 	ack()
 	user = User.get_user(users_dict, body["user"]["id"])
@@ -71,7 +111,7 @@ def display_task(ack, body, logger):
 		logger.error(f"Error displaying task: {e}")
 
 # User wants to start a call for the currently displayed task
-@app.action("start_call")
+@app.action("start_call_with_tasks")
 def start_call(ack, body, logger):
 	ack()
 	user = User.get_user(users_dict, body["user"]["id"])

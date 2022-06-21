@@ -1,6 +1,20 @@
 from typing import Dict
 from sandbox.views.blocks import *
 
+def get_wip_modal():
+	view = {
+		"type": "modal",
+		"callback_id": "session_info_wo_tasks_modal",
+		"title": {
+			"type": "plain_text",
+			"text": "WIP"
+		},
+		"blocks": [
+			get_text(type="plain_text", text="This feature is under development")
+		]
+	}
+	return view
+
 def get_session_info_wo_tasks_modal():
 
 	view = {
@@ -18,7 +32,6 @@ def get_session_info_wo_tasks_modal():
 			get_input_block(block_id="session", action_id="name", placeholder="Unique identifier", label="Session Name"),
 			get_input_block(block_id="campaign", action_id="uuid", placeholder="Find this in the Campaign Manager", label="Campaign UUID"),
 			get_input_block(block_id="caller", action_id="number", placeholder="Number to call at", label="Caller Number"),
-
 		]
 	}
 	return view

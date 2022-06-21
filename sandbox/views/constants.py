@@ -22,6 +22,7 @@ WO_TASKS_VIEWS = {
 	"session_stats_modal": get_session_stats_modal,
 	"session_info_wo_tasks_modal": get_session_info_wo_tasks_modal,
 	"session_wo_tasks_home": get_session_wo_tasks_home,
+	"wip_modal": get_wip_modal,
 	# "display_task_home": get_display_task_home,
 	# "display_call_home": get_display_call_home,
 	# "display_call_status_home": get_display_call_status_home,

@@ -4,10 +4,15 @@ import requests
 from typing import Dict, Tuple
 
 
+## api urls
 LOGIN_URL = "{}/oauth/"
 TOKEN_REFRESH_URL = "{}/oauth/refresh-token/"
 CREATE_CALLS_URL = "{}/campaign_manager/outbound/calls/"
 RETRIEVE_CALL_URL = "{}/campaign_manager/outbound/calls/{}/"
+
+## call status values
+END_STATUS = "LOGGED"
+COMPLETED_STATUS = ["LOGGED", "ENDED"]
 
 
 class OutboundDiallerClient():
@@ -69,9 +74,9 @@ class OutboundDiallerClient():
         if response.get("status") == "COMPLETED":
             if response.get("answered_count") == 1:
                 if "call_ended" in response.get("metadata"):
-                    status = "SUCCESS"
+                    status = "LOGGED"
                 else:
-                    status = "NOT ENDED"
+                    status = "ENDED"
             else:
                 status = "NOT ANSWERED"
         else:

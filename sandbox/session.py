@@ -1,12 +1,13 @@
 # this houses the Session class. has methods to support various session functionalities
 import os
+import json
 import shutil
 import random
 
 import pandas as pd
 from typing import List
 
-from sandbox.outbound_dialler import OutboundDiallerClient
+from sandbox.outbound_dialler import OutboundDiallerClient, END_STATUS, COMPLETED_STATUS
 from sandbox.utils import LogExceptions, load_yaml, save_yaml
 
 
@@ -36,6 +37,11 @@ class Session(metaclass=LogExceptions):
 	####
 	## Methods for Home tab
 
+	def load_session(self, session_name):
+		file_path = os.path.join(self._user_dir, session_name, "session_info.yaml")
+		self._info = load_yaml(file_path)
+		self.__load_old_data(session_name)
+
 	def parse_info(self, **kwargs):
 
 		self.__clear_session_info()
@@ -51,9 +57,10 @@ class Session(metaclass=LogExceptions):
 	def load_data(self, task_name):
 		self.__clear_data()
 
-		self.__load_old_data()
+		self.__load_old_data(self._info["session_name"])
 		if self._tasks_df is None:
 			self.__load_new_data(task_name)
+			self.__save_session_data()
 
 	def delete(self):
 		self.__delete_session_dir()
@@ -71,8 +78,8 @@ class Session(metaclass=LogExceptions):
 		if (tasks_df is not None) and (calls_df is not None):
 			calls_df = self.__check_all_status(calls_df)
 			return {
-				"Completed": len(calls_df[calls_df["call_status"] == "SUCCESS"]),
-				"In Progress": len(calls_df[calls_df["call_status"] != "SUCCESS"]),
+				"Completed": len(calls_df[calls_df["call_status"] == END_STATUS]),
+				"In Progress": len(calls_df[calls_df["call_status"] != END_STATUS]),
 				"Remaining": len(tasks_df),
 			}
 		else:
@@ -98,8 +105,9 @@ class Session(metaclass=LogExceptions):
 
 
 	def get_call_status(self):
-		self._current_task["call_data"], self._current_task["call_status"] = skit_client.retrieve_call(
-			self._current_task["call_task_uuid"])
+		call_data, call_status = skit_client.retrieve_call(self._current_task["call_task_uuid"])
+		self._current_task["call_data"] = json.dumps(call_data)
+		self._current_task["call_status"] = call_status
 
 	def delete_current_call(self):
 		self._current_task = {key: self._current_task[key] for key in ["index", "data"]}
@@ -135,8 +143,8 @@ class Session(metaclass=LogExceptions):
 			self._tasks_df = pd.read_csv(file_path)
 			self._calls_df = pd.DataFrame(columns=CALLS_FIELDS)
 
-	def __load_old_data(self):
-		dir_path = os.path.join(self._user_dir, self._info["session_name"])
+	def __load_old_data(self, session_name: str):
+		dir_path = os.path.join(self._user_dir, session_name)
 		if os.path.exists(os.path.join(dir_path, "tasks.csv")):
 			self._tasks_df = pd.read_csv(os.path.join(dir_path, "tasks.csv"))
 			self._calls_df = pd.read_csv(os.path.join(dir_path, "calls.csv"))
@@ -146,28 +154,27 @@ class Session(metaclass=LogExceptions):
 		if "call_task_uuid" in task_data:
 			task_data["call_data"], task_data["call_status"] = skit_client.retrieve_call(task_data["call_task_uuid"])
 
-			if task_data["call_status"] in ["SUCCESS", "NOT ENDED"]:
+			if task_data["call_status"] in COMPLETED_STATUS:
 				self._tasks_df.drop(index=task_data["index"], inplace=True)
 				self._calls_df = self._calls_df.append(task_data, ignore_index=True)
 
 
 	def __get_random_task(self):
-		index = random.choice(self._tasks_df.index.to_list())
-		data = self._tasks_df.loc[index].to_dict()
-		return {
-			"index": index,
-			"data": data
-		}
-
-	def __check_call_status(self):
-		call_data, call_status = skit_client.retrieve_call(self._current_task["call_task_uuid"])
-		self._current_task["call_data"] = call_data
-		self._current_task["call_status"] = call_status
+		if len(self._tasks_df) > 0:
+			index = random.choice(self._tasks_df.index.to_list())
+			data = self._tasks_df.loc[index].to_dict()
+			return {
+				"index": index,
+				"data": data
+			}
+		else:
+			return {}
 
 	def __check_all_status(self, calls_df: pd.DataFrame):
-		for index in calls_df[calls_df["call_status"] != "SUCCESS"].index:
-			calls_df.loc[index, "call_data"], calls_df.loc[index, "call_status"] = skit_client.retrieve_call(
-				calls_df.loc[index]["call_task_uuid"])
+		for index in calls_df[calls_df["call_status"] != END_STATUS].index:
+			call_data, call_status = skit_client.retrieve_call(calls_df.loc[index]["call_task_uuid"])
+			calls_df.loc[index, "call_data"] = json.dumps(call_data)
+			calls_df.loc[index, "call_status"] = call_status
 		return calls_df
 
 	def __clear_session_info(self):

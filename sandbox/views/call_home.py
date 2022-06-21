@@ -31,7 +31,7 @@ def get_display_call_home(campaign_uuid, session_name, caller_number, task_data:
 		call_blocks = [
 			get_divider(),
 			get_text(type="plain_text", text="Call failed"),
-			get_button(text="Call again!", action_id="start_call"),
+			get_button(text="Call again!", action_id="start_call_with_tasks"),
 			get_button(text="Choose a different task!", action_id="display_task"),
 		]
 	view["blocks"].extend(call_blocks)
