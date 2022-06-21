@@ -14,7 +14,7 @@ def get_session_info_blocks(session_name, campaign_uuid, caller_number) -> List:
 	]
 
 
-def get_session_with_tasks_home(session_name, campaign_uuid, caller_number):
+def get_session_home(session_name, campaign_uuid, caller_number):
 
 	view = {
 		"type": "home",
@@ -23,7 +23,7 @@ def get_session_with_tasks_home(session_name, campaign_uuid, caller_number):
 	view["blocks"].extend(
 		[
 			get_divider(),
-			get_button(text="Check stats for Session", action_id="session_stats_with_tasks"),
+			get_button(text="Check stats for Session", action_id="session_stats"),
 			get_divider(),
 			get_button(text="Display (random) task!", action_id="display_task"),
 		]
@@ -33,7 +33,7 @@ def get_session_with_tasks_home(session_name, campaign_uuid, caller_number):
 
 def get_display_task_home(campaign_uuid, session_name, caller_number, task_data: Dict):
 
-	view = get_session_with_tasks_home(session_name, campaign_uuid, caller_number)
+	view = get_session_home(session_name, campaign_uuid, caller_number)
 
 	if len(task_data) > 0:
 		view["blocks"].extend(
@@ -44,7 +44,7 @@ def get_display_task_home(campaign_uuid, session_name, caller_number, task_data:
 		view["blocks"].extend(
 			[
 				get_divider(),
-				get_button(text="Start call!", action_id="start_call_with_tasks"),
+				get_button(text="Start call!", action_id="start_call"),
 			]
 		)
 	else:

@@ -1,6 +1,6 @@
 from typing import Dict
 from sandbox.views.blocks import *
-from sandbox.views.session_home import get_session_with_tasks_home
+from sandbox.views.session_home import get_session_home
 
 def get_task_data_blocks(task_data: Dict):
 	blocks = [get_divider()]
@@ -21,7 +21,7 @@ def get_check_status_blocks():
 
 def get_display_call_home(campaign_uuid, session_name, caller_number, task_data: Dict, call_placed: bool):
 
-	view = get_session_with_tasks_home(session_name, campaign_uuid, caller_number)
+	view = get_session_home(session_name, campaign_uuid, caller_number)
 	view["blocks"].extend(get_task_data_blocks(task_data))
 
 	if call_placed:
@@ -41,7 +41,7 @@ def get_display_call_home(campaign_uuid, session_name, caller_number, task_data:
 
 def get_display_call_status_home(campaign_uuid, session_name, caller_number, task_data: Dict, call_status):
 
-	view = get_session_with_tasks_home(session_name, campaign_uuid, caller_number)
+	view = get_session_home(session_name, campaign_uuid, caller_number)
 	view["blocks"].extend(get_task_data_blocks(task_data))
 
 	view["blocks"].extend(get_check_status_blocks())

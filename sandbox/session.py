@@ -34,6 +34,9 @@ class Session(metaclass=LogExceptions):
 		self._tasks_dir = TASKS_DIR
 		self._user_dir = os.path.join(USERS_DIR, user_id)
 
+		if not os.path.exists(self._user_dir):
+			os.makedirs(self._user_dir)
+
 	####
 	## Methods for Home tab
 

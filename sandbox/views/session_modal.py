@@ -36,10 +36,10 @@ def get_session_info_wo_tasks_modal():
 	}
 	return view
 
-def get_session_info_with_tasks_modal():
+def get_session_info_modal():
 
 	view = get_session_info_wo_tasks_modal()
-	view["callback_id"] = "session_info_with_tasks_modal"
+	view["callback_id"] = "session_info_modal"
 	view["blocks"].extend(
 		[
 			get_input_block(block_id="task", action_id="name", placeholder="Name of the Task Sheet csv", label="Task Sheet"),

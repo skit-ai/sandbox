@@ -9,8 +9,8 @@ WITH_TASKS_VIEWS = {
 	"start_home": get_start_home,
 	"resume_session_modal": get_resume_session_modal,
 	"session_stats_modal": get_session_stats_modal,
-	"session_info_with_tasks_modal": get_session_info_with_tasks_modal,
-	"session_with_tasks_home": get_session_with_tasks_home,
+	"session_info_modal": get_session_info_modal,
+	"session_home": get_session_home,
 	"display_task_home": get_display_task_home,
 	"display_call_home": get_display_call_home,
 	"display_call_status_home": get_display_call_status_home,
@@ -18,8 +18,6 @@ WITH_TASKS_VIEWS = {
 
 WO_TASKS_VIEWS = {
 	"start_home": get_start_home,
-	"resume_session_modal": get_resume_session_modal,
-	"session_stats_modal": get_session_stats_modal,
 	"session_info_wo_tasks_modal": get_session_info_wo_tasks_modal,
 	"session_wo_tasks_home": get_session_wo_tasks_home,
 	"wip_modal": get_wip_modal,

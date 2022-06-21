@@ -20,7 +20,7 @@ class User(metaclass=LogExceptions):
 
 
 	####
-	## Methods for user interactions in the Home tab
+	# Methods for user interactions in the Home tab
 
 	def show_app_home(self, client: App.client, event: Dict):
 
@@ -35,15 +35,11 @@ class User(metaclass=LogExceptions):
 		self.__open_info_modal(client, body, view_name)
 
 
-	def open_session_info_with_tasks(self, client: App.client, body: Dict, view_name: str = "session_info_with_tasks_modal"):
+	def open_session_info(self, client: App.client, body: Dict, view_name: str = "session_info_modal"):
 		self.__open_info_modal(client, body, view_name)
 
 
-	def open_session_info_wo_tasks(self, client: App.client, body: Dict, view_name: str = "wip_modal"):
-		self.__open_info_modal(client, body, view_name)
-
-
-	def show_session_info_with_tasks(self, client: App.client, view: Dict, view_name: str = "session_with_tasks_home"):
+	def show_session_info(self, client: App.client, view: Dict, view_name: str = "session_home"):
 
 		## read values from modal submission
 		values = view["state"]["values"]
@@ -57,18 +53,8 @@ class User(metaclass=LogExceptions):
 		task_name = values["task"]["name"]["value"]
 		self.session.load_data(task_name)
 
-	def show_session_info_wo_tasks(self, client: App.client, view: Dict, view_name: str = "session_wo_tasks_home"):
 
-		## read values from modal submission
-		values = view["state"]["values"]
-		self.__parse_session_info(values)
-
-		## publish view
-		self.view.set_current(view_name, **self.session._info)
-		self.view.publish_home(client)
-
-
-	def parse_and_resume_session(self, client: App.client, view: Dict, view_name: str = "session_with_tasks_home"):
+	def parse_and_resume_session(self, client: App.client, view: Dict, view_name: str = "session_home"):
 
 		## read values from modal submission
 		values = view["state"]["values"]
@@ -82,8 +68,7 @@ class User(metaclass=LogExceptions):
 		self.view.publish_home(client)
 
 
-	def delete_session(self, client: App.client, body: Dict, view_name: str = "start_home"):
-
+	def delete_session(self, client: App.client, body: Dict):
 		self.session.delete()
 		self.show_start_home(client, body)
 
@@ -136,8 +121,26 @@ class User(metaclass=LogExceptions):
 		self.view.publish_home(client)
 
 
+	##
+	# Under development
+
+	def open_session_info_wo_tasks(self, client: App.client, body: Dict, view_name: str = "wip_modal"):
+		self.__open_info_modal(client, body, view_name)
+
+
+	def show_session_info_wo_tasks(self, client: App.client, view: Dict, view_name: str = "session_wo_tasks_home"):
+
+		## read values from modal submission
+		values = view["state"]["values"]
+		self.__parse_session_info(values)
+
+		## publish view
+		self.view.set_current(view_name, **self.session._info)
+		self.view.publish_home(client)
+
+
 	####
-	## Methods for user interactions in the Messages tab
+	# Methods for user interactions in the Messages tab
 
 	def post_help_message(self, client: App.client, view_name: str = "help_message"):
 		blocks = View.get_view(view_name, user_id=self._user_id)
@@ -205,7 +208,7 @@ class User(metaclass=LogExceptions):
 
 
 	####
-	## Class methods
+	# Class methods
 
 	@classmethod
 	def get_user(cls, users_dict: Dict, user_id: str, channel_id: str = None):

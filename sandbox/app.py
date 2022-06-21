@@ -14,7 +14,7 @@ app = App(
 )
 
 ####
-## Home tab
+# Home tab
 
 # User opens App Home tab
 @app.event("app_home_opened")
@@ -27,34 +27,18 @@ def app_home_opened(client, event, logger):
 		logger.error(f"Error publishing home tab: {e}")
 
 # User wants to start a new session - with a task sheet
-@app.action("new_session_with_tasks")
+@app.action("new_session")
 def new_session_action(ack, body, logger):
 	ack()
 	user = User.get_user(users_dict, body["user"]["id"])
-	user.open_session_info_with_tasks(app.client, body)
-	logger.info(body)
-
-# User wants to start a new session - without a task sheet
-@app.action("new_session_wo_tasks")
-def new_session_action(ack, body, logger):
-	ack()
-	user = User.get_user(users_dict, body["user"]["id"])
-	user.open_session_info_wo_tasks(app.client, body)
+	user.open_session_info(app.client, body)
 	logger.info(body)
 
 # User submits modal with session info -
-@app.view("session_info_with_tasks_modal")
+@app.view("session_info_modal")
 def session_info_submission(ack, body, client, view, logger):
 	user = User.get_user(users_dict, body["user"]["id"])
-	user.show_session_info_with_tasks(client, view)
-	ack()
-	logger.info(body)
-
-# User submits modal with session info
-@app.view("session_info_wo_tasks_modal")
-def session_info_submission(ack, body, client, view, logger):
-	user = User.get_user(users_dict, body["user"]["id"])
-	user.show_session_info_wo_tasks(client, view)
+	user.show_session_info(client, view)
 	ack()
 	logger.info(body)
 
@@ -91,7 +75,7 @@ def delete_session(ack, body, logger):
 	logger.info(body)
 
 # User wants to check stats for the session
-@app.action("session_stats_with_tasks")
+@app.action("session_stats")
 def check_session_stats(ack, body, logger):
 	ack()
 	user = User.get_user(users_dict, body["user"]["id"])
@@ -111,7 +95,7 @@ def display_task(ack, body, logger):
 		logger.error(f"Error displaying task: {e}")
 
 # User wants to start a call for the currently displayed task
-@app.action("start_call_with_tasks")
+@app.action("start_call")
 def start_call(ack, body, logger):
 	ack()
 	user = User.get_user(users_dict, body["user"]["id"])
@@ -134,8 +118,27 @@ def cancel_call(ack, body, logger):
 	user.delete_current_call(app.client, body)
 	logger.info(body)
 
+##
+# Under development
+
+# User wants to start a new session - without a task sheet
+@app.action("new_session_wo_tasks")
+def new_session_action(ack, body, logger):
+	ack()
+	user = User.get_user(users_dict, body["user"]["id"])
+	user.open_session_info_wo_tasks(app.client, body)
+	logger.info(body)
+
+# User submits modal with session info
+@app.view("session_info_wo_tasks_modal")
+def session_info_submission(ack, body, client, view, logger):
+	user = User.get_user(users_dict, body["user"]["id"])
+	user.show_session_info_wo_tasks(client, view)
+	ack()
+	logger.info(body)
+
 ####
-## Messages tab
+# Messages tab
 
 @app.message("help")
 def post_help_info(message, say):
