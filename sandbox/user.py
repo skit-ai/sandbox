@@ -24,7 +24,7 @@ class User(metaclass=LogExceptions):
 
 	def show_app_home(self, client: App.client, event: Dict):
 
-		if self.view.get_current() is None:
+		if self.view.get_home() is None:
 			self.post_help_message(client)
 			self.show_start_home(client, event)
 		else:
@@ -32,11 +32,11 @@ class User(metaclass=LogExceptions):
 
 
 	def open_resume_session(self, client: App.client, body: Dict, view_name: str = "resume_session_modal"):
-		self.__open_info_modal(client, body, view_name)
+		self.__open_simple_modal(client, body, view_name)
 
 
 	def open_session_info(self, client: App.client, body: Dict, view_name: str = "session_info_modal"):
-		self.__open_info_modal(client, body, view_name)
+		self.__open_simple_modal(client, body, view_name)
 
 
 	def show_session_info(self, client: App.client, view: Dict, view_name: str = "session_home"):
@@ -46,7 +46,7 @@ class User(metaclass=LogExceptions):
 		self.__parse_session_info(values)
 
 		## publish view
-		self.view.set_current(view_name, **self.session._info)
+		self.view.set_home(view_name, **self.session._info)
 		self.view.publish_home(client)
 
 		## tasks name
@@ -64,7 +64,7 @@ class User(metaclass=LogExceptions):
 		self.session.load_session(session_name)
 
 		## publish view
-		self.view.set_current(view_name, **self.session._info)
+		self.view.set_home(view_name, **self.session._info)
 		self.view.publish_home(client)
 
 
@@ -91,7 +91,7 @@ class User(metaclass=LogExceptions):
 		else:
 			task_data = {}
 
-		self.view.set_current(view_name, task_data=task_data, **self.session._info)
+		self.view.set_home(view_name, task_data=task_data, **self.session._info)
 		self.view.publish_home(client)
 
 
@@ -99,8 +99,8 @@ class User(metaclass=LogExceptions):
 
 		call_placed = self.session.start_call()
 
-		self.view.set_current(view_name, task_data=self.session._current_task["data"], call_placed=call_placed,
-		                      **self.session._info)
+		self.view.set_home(view_name, task_data=self.session._current_task["data"], call_placed=call_placed,
+		                   **self.session._info)
 		self.view.publish_home(client)
 
 
@@ -108,8 +108,8 @@ class User(metaclass=LogExceptions):
 
 		self.session.get_call_status()
 
-		self.view.set_current(view_name, task_data=self.session._current_task["data"],
-		                      call_status=self.session._current_task["call_status"], **self.session._info)
+		self.view.set_home(view_name, task_data=self.session._current_task["data"],
+		                   call_status=self.session._current_task["call_status"], **self.session._info)
 		self.view.publish_home(client)
 
 
@@ -117,7 +117,7 @@ class User(metaclass=LogExceptions):
 
 		self.session.delete_current_call()
 
-		self.view.set_current(view_name, task_data=self.session._current_task["data"], **self.session._info)
+		self.view.set_home(view_name, task_data=self.session._current_task["data"], **self.session._info)
 		self.view.publish_home(client)
 
 
@@ -125,7 +125,7 @@ class User(metaclass=LogExceptions):
 	# Under development
 
 	def open_session_info_wo_tasks(self, client: App.client, body: Dict, view_name: str = "wip_modal"):
-		self.__open_info_modal(client, body, view_name)
+		self.__open_simple_modal(client, body, view_name)
 
 
 	def show_session_info_wo_tasks(self, client: App.client, view: Dict, view_name: str = "session_wo_tasks_home"):
@@ -135,7 +135,7 @@ class User(metaclass=LogExceptions):
 		self.__parse_session_info(values)
 
 		## publish view
-		self.view.set_current(view_name, **self.session._info)
+		self.view.set_home(view_name, **self.session._info)
 		self.view.publish_home(client)
 
 
@@ -151,8 +151,9 @@ class User(metaclass=LogExceptions):
 
 		task_names_list = self.session.get_all_task_names()
 
-		self.view.set_current(view_name, task_sheet_list=task_names_list)
-		self.view.open_modal(client, trigger_id=body["trigger_id"])
+		view = View.get_view(view_name, task_sheet_list=task_names_list)
+		self.view.open_modal(client, trigger_id=body["trigger_id"], view=view)
+		self.view.set_previous(view)
 
 
 	def show_task_info(self, client: App.client, body: Dict, view_name: str = "task_sheet_info_modal"):
@@ -188,11 +189,11 @@ class User(metaclass=LogExceptions):
 
 	def show_start_home(self, client: App.client, event: Dict):
 		view_name = "start_home"
-		self.view.set_current(view_name=view_name, session_exists=(len(self.session.get_all_session_names()) > 0))
+		self.view.set_home(view_name=view_name, session_exists=(len(self.session.get_all_session_names()) > 0))
 		self.view.publish_home(client)
 
 
-	def __open_info_modal(self, client: App.client, body: Dict, view_name: str):
+	def __open_simple_modal(self, client: App.client, body: Dict, view_name: str):
 		view = View.get_view(view_name)
 		self.view.open_modal(client, trigger_id=body["trigger_id"], view=view)
 

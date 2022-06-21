@@ -12,8 +12,8 @@ class View(metaclass=LogExceptions):
 
 		self._user_id = user_id
 
+		self._home_view: Dict = None
 		self._previous_view: Dict = None
-		self._current_view: Dict = None
 
 
 	def publish_home(self, client: App.client, view: Dict = None):
@@ -21,14 +21,12 @@ class View(metaclass=LogExceptions):
 			user_id=self._user_id,
 			view=self.__check(view)
 		)
-		self.__rollover()
 
 	def open_modal(self, client: App.client, trigger_id: str, view: Dict = None):
 		client.views_open(
 			trigger_id=trigger_id,
 			view=self.__check(view)
 		)
-		self.__rollover()
 
 	def update_modal(self, client: App.client, view_id: str, hash: str, view: Dict = None):
 		client.views_update(
@@ -36,7 +34,6 @@ class View(metaclass=LogExceptions):
 			hash=hash,
 			view=self.__check(view)
 		)
-		self.__rollover()
 
 	def post_message(self, client: App.client, channel_id: str, text: str, blocks: Union[Dict, int]):
 		if blocks == -1:
@@ -60,21 +57,21 @@ class View(metaclass=LogExceptions):
 		)
 
 
-	def set_current(self, view_name: str, **kwargs):
-		self._current_view = self.get_view(view_name, **kwargs)
+	def set_home(self, view_name: str, **kwargs):
+		self._home_view = self.get_view(view_name, **kwargs)
 
-	def get_current(self):
-		return self._current_view
+	def get_home(self) -> Dict:
+		return self._home_view
 
-	def get_previous(self):
+	def set_previous(self, view: Dict):
+		self._previous_view = view.copy()
+
+	def get_previous(self) -> Dict:
 		return self._previous_view
 
-	def __rollover(self):
-		self._previous_view = self._current_view.copy()
-
-	def __check(self, view: Dict = None):
+	def __check(self, view: Dict = None) -> Union[Dict, None]:
 		if view is None:
-			view = self._current_view
+			view = self._home_view
 		return view
 
 
