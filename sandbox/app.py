@@ -82,6 +82,14 @@ def check_session_stats(ack, body, logger):
 	user.open_session_stats(app.client, body)
 	logger.info(body)
 
+# User wants to refresh stats for the session
+@app.action("refresh_session_stats")
+def check_session_stats(ack, body, logger):
+	ack()
+	user = User.get_user(users_dict, body["user"]["id"])
+	user.show_updated_session_stats(app.client, body)
+	logger.info(body)
+
 # User wants to see a random task in the current session
 @app.action("display_task")
 def display_task(ack, body, logger):

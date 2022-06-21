@@ -80,4 +80,9 @@ def get_session_stats_modal(session_stats: Dict):
 			get_text(type="mrkdwn", text="{}: *{}*".format(col, value)) for col, value in session_stats.items()
 		]
 	}
+	view["blocks"].extend(
+		[
+			get_button(text="Refresh", action_id="refresh_session_stats")
+		]
+	)
 	return view

@@ -75,11 +75,25 @@ class User(metaclass=LogExceptions):
 
 	def open_session_stats(self, client: App.client, body: Dict, view_name: str = "session_stats_modal"):
 
-		session_stats = self.session.get_stats()
+		self.session.check_stats()
 
-		if len(session_stats) > 0:
-			view = View.get_view(view_name, session_stats=session_stats)
+		if len(self.session._stats) > 0:
+			view = View.get_view(view_name, session_stats=self.session._stats)
 			self.view.open_modal(client, trigger_id=body["trigger_id"], view=view)
+
+		self.session.get_all_calls_status()
+
+
+	def show_updated_session_stats(self, client: App.client, body: Dict, view_name: str = "session_stats_modal"):
+
+		self.session.check_stats()
+
+		if len(self.session._stats) > 0:
+			view_values = body["view"]
+			view = View.get_view(view_name, session_stats=self.session._stats)
+			self.view.update_modal(client, view_id=view_values["id"], hash=view_values["hash"], view=view)
+
+		self.session.get_all_calls_status()
 
 
 	def show_new_task(self, client: App.client, body: Dict, view_name: str = "display_task_home"):

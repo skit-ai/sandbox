@@ -30,6 +30,7 @@ class Session(metaclass=LogExceptions):
 		self._tasks_df = None
 		self._calls_df = None
 		self._current_task = None
+		self._stats = None
 
 		self._tasks_dir = TASKS_DIR
 		self._user_dir = os.path.join(USERS_DIR, user_id)
@@ -71,22 +72,8 @@ class Session(metaclass=LogExceptions):
 		self.__clear_data()
 
 
-	def get_stats(self, tasks_df=None, calls_df=None):
-
-		if tasks_df is None:
-			tasks_df = self._tasks_df
-		if calls_df is None:
-			calls_df = self._calls_df
-
-		if (tasks_df is not None) and (calls_df is not None):
-			calls_df = self.__check_all_status(calls_df)
-			return {
-				"Completed": len(calls_df[calls_df["call_status"] == END_STATUS]),
-				"In Progress": len(calls_df[calls_df["call_status"] != END_STATUS]),
-				"Remaining": len(tasks_df),
-			}
-		else:
-			return {}
+	def check_stats(self):
+		self._stats = self.__get_stats()
 
 
 	def get_new_task(self):
@@ -111,6 +98,9 @@ class Session(metaclass=LogExceptions):
 		call_data, call_status = skit_client.retrieve_call(self._current_task["call_task_uuid"])
 		self._current_task["call_data"] = json.dumps(call_data)
 		self._current_task["call_status"] = call_status
+
+	def get_all_calls_status(self):
+		self._calls_df = self.__check_all_status(self._calls_df)
 
 	def delete_current_call(self):
 		self._current_task = {key: self._current_task[key] for key in ["index", "data"]}
@@ -169,6 +159,22 @@ class Session(metaclass=LogExceptions):
 			return {
 				"index": index,
 				"data": data
+			}
+		else:
+			return {}
+
+	def __get_stats(self, tasks_df=None, calls_df=None):
+
+		if tasks_df is None:
+			tasks_df = self._tasks_df
+		if calls_df is None:
+			calls_df = self._calls_df
+
+		if (tasks_df is not None) and (calls_df is not None):
+			return {
+				"Completed": len(calls_df[calls_df["call_status"] == END_STATUS]),
+				"In Progress": len(calls_df[calls_df["call_status"] != END_STATUS]),
+				"Remaining": len(tasks_df),
 			}
 		else:
 			return {}
