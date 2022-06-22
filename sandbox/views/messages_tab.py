@@ -4,9 +4,9 @@ from sandbox.views.blocks import *
 def get_options_blocks():
 	return [
 		get_divider(),
-		get_button_with_text(text="List all uploaded Task Sheets.", button_text="Click Me", action_id="list_task_sheets"),
+		get_button_with_text(text="List all available Task Sheets.", button_text="Click Me", action_id="list_task_sheets"),
 		get_divider(),
-		get_button_with_text(text="List all existing Task Sessions.", button_text="Click Me", action_id="list_task_sessions"),
+		get_button_with_text(text="List my existing Sessions.", button_text="Click Me", action_id="list_sessions"),
 	]
 
 
@@ -49,7 +49,7 @@ def get_task_sheet_info_modal(previous_view: Dict, task_fields: List):
 	return view
 
 
-def get_all_task_sessions_message(task_session_list: List):
+def get_all_sessions_message(task_session_list: List):
 
 	blocks = []
 	for session_name in task_session_list:

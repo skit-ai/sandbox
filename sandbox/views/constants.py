@@ -30,7 +30,7 @@ MESSAGES_VIEWS = {
 	"help_message": get_help_message,
 	"all_task_sheets_modal": get_all_task_sheets_modal,
 	"task_sheet_info_modal": get_task_sheet_info_modal,
-	"all_task_sessions_message": get_all_task_sessions_message,
+	"all_sessions_message": get_all_sessions_message,
 }
 
 ALL_VIEWS = {}

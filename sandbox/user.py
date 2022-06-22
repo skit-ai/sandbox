@@ -10,10 +10,9 @@ from sandbox.views import View
 class User(metaclass=LogExceptions):
 	""" Instantiates a User object to handle Slack interactions for a specific user."""
 
-	def __init__(self, user_id: str, channel_id: str):
+	def __init__(self, user_id: str):
 
 		self._user_id = user_id
-		self._channel_id = channel_id
 
 		self.view: View = View(user_id)
 		self.session: Session = Session(user_id)
@@ -25,7 +24,7 @@ class User(metaclass=LogExceptions):
 	def show_app_home(self, client: App.client, event: Dict):
 
 		if self.view.get_home() is None:
-			self.post_help_message(client)
+			self.post_help_message(client, event["channel"])
 			self.show_start_home(client, event)
 		else:
 			self.view.publish_home(client)
@@ -156,9 +155,9 @@ class User(metaclass=LogExceptions):
 	####
 	# Methods for user interactions in the Messages tab
 
-	def post_help_message(self, client: App.client, view_name: str = "help_message"):
+	def post_help_message(self, client: App.client, channel_id: str, view_name: str = "help_message"):
 		blocks = View.get_view(view_name, user_id=self._user_id)
-		self.view.post_message(client, channel_id=self._channel_id, text="Something went wrong", blocks=blocks)
+		self.view.post_message(client, channel_id=channel_id, text="Something went wrong", blocks=blocks)
 
 
 	def show_all_tasks(self, client: App.client, body: Dict, view_name: str = "all_task_sheets_modal"):
@@ -180,12 +179,12 @@ class User(metaclass=LogExceptions):
 		self.view.update_modal(client, view_id=view_values["id"], hash=view_values["hash"], view=view)
 
 
-	def show_all_session_names(self, client: App.client, body: Dict, view_name: str = "all_task_sessions_message"):
+	def show_all_session_names(self, client: App.client, body: Dict, view_name: str = "all_sessions_message"):
 
 		session_names_list = self.session.get_all_session_names()
 
 		blocks = View.get_view(view_name, task_session_list=session_names_list)
-		self.view.post_message(client, channel_id=self._channel_id, text="Something went wrong", blocks=blocks)
+		self.view.post_message(client, channel_id=body["channel"]["id"], text="Something went wrong", blocks=blocks)
 
 
 	def download_session_data(self, client: App.client, body: Dict):
@@ -194,9 +193,9 @@ class User(metaclass=LogExceptions):
 		data_file = self.session.get_session_data(session_name)
 
 		if data_file == -1:
-			self.view.post_message(client, channel_id=self._channel_id,  text="No data present", blocks=-1)
+			self.view.post_message(client, channel_id=body["channel"]["id"],  text="No data present", blocks=-1)
 		else:
-			self.view.upload_file(client, channel_id=self._channel_id,
+			self.view.upload_file(client, channel_id=body["channel"]["id"],
 			                      initial_comment="Here's your download of created calls :smile:", file=data_file,
 			                      title=f"{session_name}.created_calls.csv")
 
@@ -226,7 +225,7 @@ class User(metaclass=LogExceptions):
 	# Class methods
 
 	@classmethod
-	def get_user(cls, users_dict: Dict, user_id: str, channel_id: str = None):
+	def get_user(cls, users_dict: Dict, user_id: str):
 		if user_id not in users_dict:
-			users_dict[user_id] = cls(user_id, channel_id)
+			users_dict[user_id] = cls(user_id)
 		return users_dict.get(user_id)

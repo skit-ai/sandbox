@@ -20,7 +20,7 @@ app = App(
 @app.event("app_home_opened")
 def app_home_opened(client, event, logger):
 	try:
-		user = User.get_user(users_dict, event["user"], event["channel"])
+		user = User.get_user(users_dict, event["user"])
 		user.show_app_home(client, event)
 
 	except Exception as e:
@@ -151,7 +151,7 @@ def session_info_submission(ack, body, client, view, logger):
 @app.message("help")
 def post_help_info(message, say):
 	user = User.get_user(users_dict, message["user"])
-	user.post_help_message(app.client)
+	user.post_help_message(app.client, message["channel"])
 
 @app.action("list_task_sheets")
 def list_all_task_sheets(ack, body, logger):
@@ -167,8 +167,8 @@ def list_task_sheet_info(ack, body, logger):
 	user.show_task_info(app.client, body)
 	logger.info(body)
 
-@app.action("list_task_sessions")
-def list_all_task_sessions(ack, body, logger):
+@app.action("list_sessions")
+def list_all_sessions(ack, body, logger):
 	ack()
 	user = User.get_user(users_dict, body["user"]["id"])
 	user.show_all_session_names(app.client, body)
