@@ -52,7 +52,7 @@ def resume_session_action(ack, body, logger):
 
 # User submits resume session modal
 @app.view("resume_session_modal")
-def handle_submission(ack, body, client, view, logger):
+def resume_session_submission(ack, body, client, view, logger):
 	user = User.get_user(users_dict, body["user"]["id"])
 	user.parse_and_resume_session(client, view)
 	ack()
@@ -64,6 +64,22 @@ def new_session_info(ack, body, logger):
 	ack()
 	user = User.get_user(users_dict, body["user"]["id"])
 	user.show_start_home(app.client, body)
+	logger.info(body)
+
+# User wants to rename current session
+@app.action("rename_session")
+def rename_session_action(ack, body, logger):
+	ack()
+	user = User.get_user(users_dict, body["user"]["id"])
+	user.open_rename_session(app.client, body)
+	logger.info(body)
+
+# User submits rename session modal
+@app.view("rename_session_modal")
+def rename_session_submission(ack, body, client, view, logger):
+	user = User.get_user(users_dict, body["user"]["id"])
+	user.parse_new_session_name(client, view)
+	ack()
 	logger.info(body)
 
 # User wants to delete current session

@@ -67,6 +67,26 @@ def get_resume_session_modal():
 	return view
 
 
+def get_rename_session_modal():
+
+	view = {
+		"type": "modal",
+		"callback_id": "rename_session_modal",
+		"title": {
+			"type": "plain_text",
+			"text": "Rename Session"
+		},
+		"submit": {
+			"type": "plain_text",
+			"text": "Submit"
+		},
+		"blocks": [
+			get_input_block(block_id="session", action_id="name", placeholder="Enter a new name for your Session", label="Session Name"),
+		]
+	}
+	return view
+
+
 def get_session_stats_modal(session_stats: Dict):
 
 	view = {

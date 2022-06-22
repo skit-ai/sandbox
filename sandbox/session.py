@@ -39,27 +39,30 @@ class Session(metaclass=LogExceptions):
 			os.makedirs(self._user_dir)
 
 	####
-	## Methods for Home tab
+	# Methods for Home tab
 
 	def load_session(self, session_name):
-		file_path = os.path.join(self._user_dir, session_name, "session_info.yaml")
-		self._info = load_yaml(file_path)
+		self.__load_old_info(session_name)
 		self.__load_old_data(session_name)
 
 	def parse_info(self, **kwargs):
 
 		self.__clear_session_info()
 
-		self._info = {
-			"session_name": kwargs["session_name"],
-			"campaign_uuid": kwargs["campaign_uuid"],
-			"caller_number": kwargs["caller_number"],
-		}
+		self._info = {}
+		for key, value in kwargs.items():
+			self._info[key] = value
 
 		self.__log_session_info()
 
+	def update_info(self, session_name):
+		if not self.__session_exists(session_name):
+			self.__update_session_info(session_name)
+			self._info["session_name"] = session_name
+			self.__save_session_info()
+
 	def load_data(self, task_name):
-		self.__clear_data()
+		self.__clear_session_data()
 
 		self.__load_old_data(self._info["session_name"])
 		if self._tasks_df is None:
@@ -69,12 +72,11 @@ class Session(metaclass=LogExceptions):
 	def delete(self):
 		self.__delete_session_dir()
 		self.__clear_session_info()
-		self.__clear_data()
+		self.__clear_session_data()
 
 
 	def check_stats(self):
 		self._stats = self.__get_stats()
-
 
 	def get_new_task(self):
 		if self._current_task is not None:
@@ -106,7 +108,15 @@ class Session(metaclass=LogExceptions):
 		self._current_task = {key: self._current_task[key] for key in ["index", "data"]}
 
 	####
-	## Internal methods. Mostly handles data flows
+	# Internal methods. Mostly handles data flows
+
+	##
+	# Info related
+
+	def __update_session_info(self, session_name):
+		old_dir = os.path.join(self._user_dir, self._info["session_name"])
+		new_dir = os.path.join(self._user_dir, session_name)
+		os.rename(old_dir, new_dir)
 
 	def __log_session_info(self):
 		# go to directory
@@ -117,10 +127,20 @@ class Session(metaclass=LogExceptions):
 		# load or save session_info
 		file_path = os.path.join(dir_path, "session_info.yaml")
 		if os.path.exists(file_path):
-			self._info = load_yaml(file_path)
+			self.__load_old_info(self._info["session_name"])
 		else:
-			save_yaml(self._info, file_path)
+			self.__save_session_info()
 
+	##
+	# Data related
+
+	def __save_session_info(self):
+		# go to directory
+		dir_path = os.path.join(self._user_dir, self._info["session_name"])
+
+		# save session_info
+		file_path = os.path.join(dir_path, "session_info.yaml")
+		save_yaml(self._info, file_path)
 
 	def __save_session_data(self):
 		# go to directory
@@ -130,11 +150,9 @@ class Session(metaclass=LogExceptions):
 		self._tasks_df.to_csv(os.path.join(dir_path, "tasks.csv"), index=False)
 		self._calls_df.to_csv(os.path.join(dir_path, "calls.csv"), index=False)
 
-	def __load_new_data(self, tasks_name):
-		file_path = os.path.join(self._tasks_dir, f"{tasks_name}.csv")
-		if os.path.exists(file_path):
-			self._tasks_df = pd.read_csv(file_path)
-			self._calls_df = pd.DataFrame(columns=CALLS_FIELDS)
+	def __load_old_info(self,session_name: str):
+		file_path = os.path.join(self._user_dir, session_name, "session_info.yaml")
+		self._info = load_yaml(file_path)
 
 	def __load_old_data(self, session_name: str):
 		dir_path = os.path.join(self._user_dir, session_name)
@@ -142,6 +160,17 @@ class Session(metaclass=LogExceptions):
 			self._tasks_df = pd.read_csv(os.path.join(dir_path, "tasks.csv"))
 			self._calls_df = pd.read_csv(os.path.join(dir_path, "calls.csv"))
 
+	def __load_new_data(self, tasks_name):
+		file_path = os.path.join(self._user_dir, self._info["session_name"], "session_data.yaml")
+		save_yaml({"task_sheet": tasks_name}, file_path)
+
+		file_path = os.path.join(self._tasks_dir, f"{tasks_name}.csv")
+		if os.path.exists(file_path):
+			self._tasks_df = pd.read_csv(file_path)
+			self._calls_df = pd.DataFrame(columns=CALLS_FIELDS)
+
+	##
+	# Task related
 
 	def __log_task(self, task_data):
 		if "call_task_uuid" in task_data:
@@ -189,15 +218,18 @@ class Session(metaclass=LogExceptions):
 	def __clear_session_info(self):
 		self._info = None
 
-	def __clear_data(self):
+	def __clear_session_data(self):
 		self._tasks_df = None
 		self._calls_df = None
 
 	def __delete_session_dir(self):
 		shutil.rmtree(os.path.join(self._user_dir, self._info["session_name"]))
 
+	def __session_exists(self, session_name):
+		return session_name in os.listdir(self._user_dir)
+
 	####
-	## Methods for Messages tab
+	# Methods for Messages tab
 
 	def get_all_task_names(self) -> List:
 		return [t.rsplit(".csv", 1)[0] for t in os.listdir(self._tasks_dir)]

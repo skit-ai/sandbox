@@ -6,6 +6,7 @@ def get_session_info_blocks(session_name, campaign_uuid, caller_number) -> List:
 		get_text(type="mrkdwn", text="*Welcome to your SandBox!*"),
 		get_divider(),
 		get_button(text="Pause Session", action_id="pause_session"),
+		get_button(text="Rename Session", action_id="rename_session"),
 		# get_button(text="Delete Session", action_id="delete_session"),
 		get_divider(),
 		get_text(type="plain_text", text="Session Name: {}".format(session_name)),

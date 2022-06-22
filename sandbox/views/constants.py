@@ -8,6 +8,7 @@ from sandbox.views.messages_tab import *
 WITH_TASKS_VIEWS = {
 	"start_home": get_start_home,
 	"resume_session_modal": get_resume_session_modal,
+	"rename_session_modal": get_rename_session_modal,
 	"session_stats_modal": get_session_stats_modal,
 	"session_info_modal": get_session_info_modal,
 	"session_home": get_session_home,

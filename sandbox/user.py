@@ -67,6 +67,24 @@ class User(metaclass=LogExceptions):
 		self.view.publish_home(client)
 
 
+	def open_rename_session(self, client: App.client, body: Dict, view_name: str = "rename_session_modal"):
+		self.__open_simple_modal(client, body, view_name)
+
+
+	def parse_new_session_name(self, client: App.client, view: Dict, view_name: str = "session_home"):
+
+		## read values from modal submission
+		values = view["state"]["values"]
+
+		## session info
+		session_name = values["session"]["name"]["value"]
+		self.session.update_info(session_name)
+
+		## publish view
+		self.view.set_home(view_name, **self.session._info)
+		self.view.publish_home(client)
+
+
 	def delete_session(self, client: App.client, body: Dict):
 		self.session.delete()
 		self.show_start_home(client, body)
