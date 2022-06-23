@@ -9,6 +9,31 @@ def get_options_blocks():
 		get_button_with_text(text="List my existing Sessions.", button_text="Click Me", action_id="list_sessions"),
 	]
 
+def get_admin_message():
+
+	blocks = [
+		get_button_with_text(text="Options for download", button_text="Click Me", action_id="download_options"),
+	]
+	return blocks
+
+def get_download_options_modal():
+	view = {
+		"type": "modal",
+		"callback_id": "download_options_modal",
+		"title": {
+			"type": "plain_text",
+			"text": "Download Options"
+		},
+		"submit": {
+			"type": "plain_text",
+			"text": "Submit"
+		},
+		"blocks": [
+			get_input_block(block_id="session", action_id="name", placeholder="Download all data from sessions of this name",
+			                label="Session Name"),
+		]
+	}
+	return view
 
 def get_help_message(user_id):
 

@@ -32,6 +32,8 @@ MESSAGES_VIEWS = {
 	"all_task_sheets_modal": get_all_task_sheets_modal,
 	"task_sheet_info_modal": get_task_sheet_info_modal,
 	"all_sessions_message": get_all_sessions_message,
+	"admin_message": get_admin_message,
+	"download_options_modal": get_download_options_modal,
 }
 
 ALL_VIEWS = {}

@@ -1,10 +1,12 @@
 # this houses the User class. has methods to support various user interactions
+import os.path
 from typing import Dict
 from slack_bolt import App
 
-from sandbox.session import Session
-from sandbox.utils import LogExceptions
 from sandbox.views import View
+from sandbox.session import Session
+from sandbox.utils import LogExceptions, load_yaml
+from sandbox.constants import *
 
 
 class User(metaclass=LogExceptions):
@@ -222,6 +224,49 @@ class User(metaclass=LogExceptions):
 		view_name = "start_home"
 		self.view.set_home(view_name=view_name, session_exists=(len(self.session.get_all_session_names()) > 0))
 		self.view.publish_home(client)
+
+	##
+	# Admin interactions
+
+	def post_admin_message(self, client: App.client, channel_id: str, view_name: str = "admin_message"):
+
+		admin_users = load_yaml(ADMIN_YAML)
+
+		if self._user_id in admin_users:
+			blocks = View.get_view(view_name)
+			self.view.post_message(client, channel_id=channel_id, text="Something went wrong", blocks=blocks)
+		else:
+			self.view.post_message(client, channel_id=channel_id,
+			                       text="Sorry, this option is only available to admins.", blocks=-1)
+
+
+	def show_download_options(self, client: App.client, body: Dict, view_name: str = "download_options_modal"):
+		self._channel_id = body["channel"]["id"]
+		self.__open_simple_modal(client, body, view_name)
+
+
+	def download_all_session_data(self, client: App.client, view: Dict):
+
+		## read values from modal submission
+		values = view["state"]["values"]
+		session_name = values["session"]["name"]["value"]
+
+		## get all sessions with given name. across all users
+		data_files = []
+		for user in os.listdir(USERS_DIR):
+			user_dir = os.path.join(USERS_DIR, user)
+			if os.path.isdir(user_dir):
+				if session_name in self.session.get_all_session_names(user_dir):
+					file = self.session.get_session_data(session_name, user_dir)
+					if file != -1:
+						data_files.append(file)
+
+		## upload to messages tab and delete temp data file
+		all_data_file = self.session.merge_session_data(data_files)
+		self.view.upload_file(client, channel_id=self._channel_id,
+		                      initial_comment="Here's your download :smile:", file=all_data_file,
+		                      title=f"{session_name}.created_calls.csv")
+		os.remove(all_data_file)
 
 
 	def __open_simple_modal(self, client: App.client, body: Dict, view_name: str):

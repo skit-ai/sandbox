@@ -197,6 +197,28 @@ def download_session_data(ack, body, logger):
 	user.download_session_data(app.client, body)
 	logger.info(body)
 
+##
+# Admin actions
+
+@app.message("admin")
+def post_help_info(message, say):
+	user = User.get_user(users_dict, message["user"])
+	user.post_admin_message(app.client, message["channel"])
+
+@app.action("download_options")
+def list_all_task_sheets(ack, body, logger):
+	ack()
+	user = User.get_user(users_dict, body["user"]["id"])
+	user.show_download_options(app.client, body)
+	logger.info(body)
+
+# User submits modal with session info
+@app.view("download_options_modal")
+def download_options_submission(ack, body, client, view, logger):
+	ack()
+	user = User.get_user(users_dict, body["user"]["id"])
+	user.download_all_session_data(client, view)
+	logger.info(body)
 
 # Start your app
 def main():

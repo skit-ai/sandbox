@@ -9,14 +9,11 @@ from typing import List
 
 from sandbox.outbound_dialler import OutboundDiallerClient, END_STATUS, COMPLETED_STATUS
 from sandbox.utils import LogExceptions, load_yaml, save_yaml
+from sandbox.constants import *
 
 
 ## cols
 CALLS_FIELDS = ["index", "data", "call_task_uuid", "call_status", "call_data"]
-
-## data storage
-TASKS_DIR = os.path.join("data", "tasks")
-USERS_DIR = os.path.join("data", "users")
 
 
 skit_client = OutboundDiallerClient()
@@ -125,7 +122,7 @@ class Session(metaclass=LogExceptions):
 			os.makedirs(dir_path)
 
 		# load or save session_info
-		file_path = os.path.join(dir_path, "session_info.yaml")
+		file_path = os.path.join(dir_path, SESSION_INFO)
 		if os.path.exists(file_path):
 			self.__load_old_info(self._info["session_name"])
 		else:
@@ -139,7 +136,7 @@ class Session(metaclass=LogExceptions):
 		dir_path = os.path.join(self._user_dir, self._info["session_name"])
 
 		# save session_info
-		file_path = os.path.join(dir_path, "session_info.yaml")
+		file_path = os.path.join(dir_path, SESSION_INFO)
 		save_yaml(self._info, file_path)
 
 	def __save_session_data(self):
@@ -151,7 +148,7 @@ class Session(metaclass=LogExceptions):
 		self._calls_df.to_csv(os.path.join(dir_path, "calls.csv"), index=False)
 
 	def __load_old_info(self,session_name: str):
-		file_path = os.path.join(self._user_dir, session_name, "session_info.yaml")
+		file_path = os.path.join(self._user_dir, session_name, SESSION_INFO)
 		self._info = load_yaml(file_path)
 
 	def __load_old_data(self, session_name: str):
@@ -161,7 +158,7 @@ class Session(metaclass=LogExceptions):
 			self._calls_df = pd.read_csv(os.path.join(dir_path, "calls.csv"))
 
 	def __load_new_data(self, tasks_name):
-		file_path = os.path.join(self._user_dir, self._info["session_name"], "session_data.yaml")
+		file_path = os.path.join(self._user_dir, self._info["session_name"], SESSION_DATA)
 		save_yaml({"task_sheet": tasks_name}, file_path)
 
 		file_path = os.path.join(self._tasks_dir, f"{tasks_name}.csv")
@@ -237,14 +234,40 @@ class Session(metaclass=LogExceptions):
 	def get_task_info(self, task_name) -> List:
 		return pd.read_csv(os.path.join(self._tasks_dir, f"{task_name}.csv")).columns.to_list()
 
-	def get_all_session_names(self) -> List:
-		return [name for name in os.listdir(self._user_dir) if os.path.isdir(os.path.join(self._user_dir, name))]
+	def get_all_session_names(self, user_dir=None) -> List:
+		if user_dir is None:
+			user_dir = self._user_dir
+		return [name for name in os.listdir(user_dir) if os.path.isdir(os.path.join(user_dir, name))]
 
-	def get_session_data(self, session_name):
-		data_file = os.path.join(self._user_dir, f"{session_name}", "calls.csv")
+	def get_session_data(self, session_name, user_dir=None):
+
+		if user_dir is None:
+			user_dir = self._user_dir
+
+		data_file = os.path.join(user_dir, f"{session_name}", "calls.csv")
 		if os.path.exists(data_file):
 			data = self.__check_all_status(pd.read_csv(data_file))
+			data["user_id"] = os.path.basename(user_dir) ## store user id information in session data
 			data.to_csv(data_file, index=False)
 			return data_file
 		else:
 			return -1
+
+	def merge_session_data(self, data_files: List[str]):
+
+		# merge all csvs
+		all_data = pd.DataFrame()
+		for file in data_files:
+			all_data = pd.concat([all_data, pd.read_csv(file)])
+
+		# parse important fields and discard remaining
+		all_data["tag"] = all_data["data"]
+		all_data["call_uuid"] = all_data.apply(
+			lambda row: json.loads(row["call_data"])["metadata"]["answered_call_metadata"][
+				"call_uuid"] if row["call_status"] == "LOGGED" else -1, axis=1)
+		all_data = all_data[["call_uuid", "tag", "user_id"]]
+
+		# save to disk
+		all_data_file = os.path.join(DATA_DIR, "{}.csv".format(str(random.random())))
+		all_data.to_csv(all_data_file, index=False)
+		return all_data_file
