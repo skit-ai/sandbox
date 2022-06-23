@@ -2,6 +2,8 @@
 
 import types
 import yaml
+import json
+import ast
 from sandbox.logger import logger
 
 def save_yaml(data, path):
@@ -11,6 +13,13 @@ def save_yaml(data, path):
 def load_yaml(path):
     with open(path, "r") as f:
         return yaml.safe_load(f)
+
+def read_json(data):
+    try:
+        output = json.loads(data)
+    except:
+        output = ast.literal_eval(data)
+    return output
 
 def log_exceptions(func):
     """

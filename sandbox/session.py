@@ -8,7 +8,7 @@ import pandas as pd
 from typing import List
 
 from sandbox.outbound_dialler import OutboundDiallerClient, END_STATUS, COMPLETED_STATUS
-from sandbox.utils import LogExceptions, load_yaml, save_yaml
+from sandbox.utils import LogExceptions, load_yaml, save_yaml, read_json
 from sandbox.constants import *
 
 
@@ -171,7 +171,9 @@ class Session(metaclass=LogExceptions):
 
 	def __log_task(self, task_data):
 		if "call_task_uuid" in task_data:
-			task_data["call_data"], task_data["call_status"] = skit_client.retrieve_call(task_data["call_task_uuid"])
+			call_data, call_status = skit_client.retrieve_call(task_data["call_task_uuid"])
+			task_data["call_data"] = json.dumps(call_data)
+			task_data["call_status"] = call_status
 
 			if task_data["call_status"] in COMPLETED_STATUS:
 				self._tasks_df.drop(index=task_data["index"], inplace=True)
@@ -255,19 +257,19 @@ class Session(metaclass=LogExceptions):
 
 	def merge_session_data(self, data_files: List[str]):
 
-		# merge all csvs
+		## merge all csvs
 		all_data = pd.DataFrame()
 		for file in data_files:
 			all_data = pd.concat([all_data, pd.read_csv(file)])
 
-		# parse important fields and discard remaining
+		## parse important fields and discard remaining
 		all_data["tag"] = all_data["data"]
 		all_data["call_uuid"] = all_data.apply(
-			lambda row: json.loads(row["call_data"])["metadata"]["answered_call_metadata"][
+			lambda row: read_json(row["call_data"])["metadata"]["answered_call_metadata"][
 				"call_uuid"] if row["call_status"] == "LOGGED" else -1, axis=1)
 		all_data = all_data[["call_uuid", "tag", "user_id"]]
 
-		# save to disk
+		## save to disk
 		all_data_file = os.path.join(DATA_DIR, "{}.csv".format(str(random.random())))
 		all_data.to_csv(all_data_file, index=False)
 		return all_data_file
