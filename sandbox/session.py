@@ -7,7 +7,7 @@ import random
 import pandas as pd
 from typing import List
 
-from sandbox.outbound_dialler import OutboundDiallerClient, END_STATUS, COMPLETED_STATUS
+from sandbox.outbound_dialler import OutboundDiallerClient
 from sandbox.utils import LogExceptions, load_yaml, save_yaml, read_json
 from sandbox.constants import *
 
@@ -176,9 +176,9 @@ class Session(metaclass=LogExceptions):
 			task_data["call_status"] = call_status
 
 			if task_data["call_status"] in COMPLETED_STATUS:
-				self._tasks_df.drop(index=task_data["index"], inplace=True)
 				self._calls_df = self._calls_df.append(task_data, ignore_index=True)
-
+				if task_data["index"] in self._calls_df["index"].to_list():
+					self._tasks_df.drop(index=task_data["index"], inplace=True)
 
 	def __get_random_task(self):
 		if len(self._tasks_df) > 0:
@@ -210,8 +210,9 @@ class Session(metaclass=LogExceptions):
 	def __check_all_status(self, calls_df: pd.DataFrame):
 		for index in calls_df[calls_df["call_status"] != END_STATUS].index:
 			call_data, call_status = skit_client.retrieve_call(calls_df.loc[index]["call_task_uuid"])
-			calls_df.loc[index, "call_data"] = json.dumps(call_data)
-			calls_df.loc[index, "call_status"] = call_status
+			if call_status in ALL_STATUS:
+				calls_df.loc[index, "call_data"] = json.dumps(call_data)
+				calls_df.loc[index, "call_status"] = call_status
 		return calls_df
 
 	def __clear_session_info(self):

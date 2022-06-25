@@ -100,7 +100,7 @@ def check_session_stats(ack, body, logger):
 
 # User wants to refresh stats for the session
 @app.action("refresh_session_stats")
-def check_session_stats(ack, body, logger):
+def update_session_stats(ack, body, logger):
 	ack()
 	user = User.get_user(users_dict, body["user"]["id"])
 	user.show_updated_session_stats(app.client, body)
