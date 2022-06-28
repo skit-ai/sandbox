@@ -28,6 +28,7 @@ class Session(metaclass=LogExceptions):
 		self._calls_df = None
 		self._current_task = None
 		self._stats = None
+		self._created_calls_count = 0
 
 		self._tasks_dir = TASKS_DIR
 		self._user_dir = os.path.join(USERS_DIR, user_id)
@@ -177,6 +178,7 @@ class Session(metaclass=LogExceptions):
 
 			if task_data["call_status"] in COMPLETED_STATUS:
 				self._calls_df = self._calls_df.append(task_data, ignore_index=True)
+				self._created_calls_count += 1
 				if task_data["index"] in self._calls_df["index"].to_list():
 					self._tasks_df.drop(index=task_data["index"], inplace=True)
 

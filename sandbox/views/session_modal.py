@@ -87,7 +87,7 @@ def get_rename_session_modal():
 	return view
 
 
-def get_session_stats_modal(session_stats: Dict):
+def get_session_stats_modal(session_stats: Dict, created_calls_count=0):
 
 	view = {
 		"type": "modal",
@@ -100,6 +100,13 @@ def get_session_stats_modal(session_stats: Dict):
 			get_text(type="mrkdwn", text="{}: *{}*".format(col, value)) for col, value in session_stats.items()
 		]
 	}
+	view["blocks"].extend(
+		[
+			get_divider(),
+			get_text(type="plain_text", text="Count: {}".format(created_calls_count)),
+			get_divider(),
+		]
+	)
 	view["blocks"].extend(
 		[
 			get_button(text="Refresh", action_id="refresh_session_stats")
