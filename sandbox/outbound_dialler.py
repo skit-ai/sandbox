@@ -4,6 +4,7 @@ import requests
 from typing import Dict, Tuple
 
 from sandbox.constants import *
+from sandbox.utils import LogExceptions
 
 
 ## api urls
@@ -13,7 +14,7 @@ CREATE_CALLS_URL = "{}/campaign_manager/outbound/calls/"
 RETRIEVE_CALL_URL = "{}/campaign_manager/outbound/calls/{}/"
 
 
-class OutboundDiallerClient():
+class OutboundDiallerClient(metaclass=LogExceptions):
     """ Instantiates a client object to handle interactions with the Outcound Calls API."""
 
     def __init__(self, email=None, password=None, api_basepath=None):
@@ -94,9 +95,18 @@ class OutboundDiallerClient():
         if "access_token" not in response:
             raise Exception(response)
 
-    def check_json(self, response):
+    def format_json(self, response):
         return json.loads(response)
 
+    def check_for_refresh(foo):
+        def refresh(self, *args, **kwargs):
+            try:
+                return foo(self, *args, **kwargs)
+            except:
+                self._access_token, self._refresh_token = self.refresh_tokens()
+                return foo(self, *args, **kwargs)
+
+        return refresh
 
     ####
     ## Outbound Dialler APIs
@@ -115,7 +125,7 @@ class OutboundDiallerClient():
         url = LOGIN_URL.format(self._api_basepath)
 
         response = requests.request("POST", url, headers=headers, data=payload)
-        return self.check_json(response.text)
+        return self.format_json(response.text)
 
     def __refresh_token_api(self, refresh_token) -> Dict:
 
@@ -128,8 +138,9 @@ class OutboundDiallerClient():
         url = TOKEN_REFRESH_URL.format(self._api_basepath)
 
         response = requests.request("GET", url, headers=headers, data=payload)
-        return self.check_json(response.text)
+        return self.format_json(response.text)
 
+    @check_for_refresh
     def __create_calls_api(self, campaign_uuid, caller_number_list, metadata_list, tag) -> Dict:
 
         payload = json.dumps({
@@ -152,8 +163,9 @@ class OutboundDiallerClient():
         url = CREATE_CALLS_URL.format(self._api_basepath)
 
         response = requests.request("POST", url, headers=headers, data=payload)
-        return self.check_json(response.text)
+        return self.format_json(response.text)
 
+    @check_for_refresh
     def __retrieve_call_api(self, call_task_uuid):
 
         payload = {}
@@ -165,5 +177,5 @@ class OutboundDiallerClient():
         url = RETRIEVE_CALL_URL.format(self._api_basepath, call_task_uuid)
 
         response = requests.request("GET", url, headers=headers, data=payload)
-        return self.check_json(response.text)
+        return self.format_json(response.text)
 
